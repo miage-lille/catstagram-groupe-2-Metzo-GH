@@ -1,18 +1,41 @@
 import { Cmd } from 'redux-loop';
 import { fetchCatsCommit, fetchCatsRollback } from './actions';
 import { FetchCatsRequest } from './types/actions.type';
+import { Picture } from './types/picture.type';
+
+interface PixabayResponse {
+  hits: Array<{
+    previewURL: string;
+    webformatURL: string;
+    largeImageURL: string;
+    user: string;
+  }>;
+}
+
+const parsePictures = (response: Response): Promise<Picture[]> => 
+  response.json()
+    .then((data: PixabayResponse) => 
+      data.hits.map(hit => ({
+        previewFormat: hit.previewURL,
+        webFormat: hit.webformatURL,
+        largeFormat: hit.largeImageURL,
+        author: hit.user
+      }))
+    );
 
 export const cmdFetch = (action: FetchCatsRequest) =>
   Cmd.run(
     () => {
       return fetch(action.path, {
         method: action.method,
-      }).then(checkStatus);
+      })
+        .then(checkStatus)
+        .then(parsePictures);
     },
     {
-      successActionCreator: fetchCatsCommit, // (equals to (payload) => fetchCatsCommit(payload))
-      failActionCreator: fetchCatsRollback, // (equals to (error) => fetchCatsCommit(error))
-    },
+      successActionCreator: fetchCatsCommit,
+      failActionCreator: fetchCatsRollback,
+    }
   );
 
 const checkStatus = (response: Response) => {

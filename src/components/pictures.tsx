@@ -1,5 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
+import { useSelector, useDispatch } from 'react-redux';
+import { picturesSelector, getSelectedPicture } from '../reducer';
+import Modal from './modal';
+import * as O from 'fp-ts/lib/Option';
 
 const Container = styled.div`
   padding: 1rem;
@@ -17,8 +21,33 @@ const Image = styled.img`
     transform: scale(1.2);
   }
 `;
+
 const Pictures = () => {
-  return null;
+  const pictures = useSelector(picturesSelector);
+  const selectedPicture = useSelector(getSelectedPicture);
+  const dispatch = useDispatch();
+
+  return (
+    <>
+      <Container>
+        {pictures.map((picture, index) => (
+          <Image
+            key={index}
+            src={picture.previewFormat}
+            alt={`Cat by ${picture.author}`}
+            onClick={() => dispatch({ type: 'SELECT_PICTURE', picture })}
+          />
+        ))}
+      </Container>
+
+      {O.isSome(selectedPicture) && (
+        <Modal
+          largeFormat={selectedPicture.value.largeFormat}
+          close={() => dispatch({ type: 'CLOSE_MODAL' })}
+        />
+      )}
+    </>
+  );
 };
 
 export default Pictures;
